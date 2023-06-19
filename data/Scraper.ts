@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb';
 import Balls from '../types/Balls';
 import { CheerioCrawler, log } from 'crawlee';
+import { Actor } from 'apify';
 
 /**
  * @class Scraper
@@ -33,7 +34,9 @@ export default class Scraper {
       requestHandler: async ({ request, $ }) => {
         log.debug(`Processing ${request.url}...`);
 
-        for (const row of $('tbody').children().toArray()) {
+        const tableRows = $('tbody').children().toArray();
+
+        for (const row of tableRows) {
           if ($(row).hasClass('noBox')) continue;
 
           const balls: Balls = {
@@ -43,7 +46,7 @@ export default class Scraper {
               .children()
               .toArray()
               .map(ball => parseInt($(ball).text())),
-            bonus: parseInt($(row).find('li.bonus-ball').children().text()),
+            bonus: parseInt($(row).find('li.bonus-ball').text()),
             jackpot: parseInt($(row).find('td[data-title="Jackpot"]').text()),
             outcome: $(row).find('td[data-title="Outcome"]').text()
           };
@@ -55,6 +58,8 @@ export default class Scraper {
 
     const startUrls: Array<string> = await this.getStartUrls();
     await crawler.run(startUrls);
+
+    console.log(winningBalls);
 
     if (winningBalls.length > 0) await this.postData(winningBalls);
     return winningBalls;

@@ -30,4 +30,7 @@ const main = async () => {
   }
 };
 
-(async () => await main())();
+(async () => {
+  const data = await main();
+  console.log(data);
+})();
