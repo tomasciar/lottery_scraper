@@ -23,8 +23,8 @@ const main = async () => {
   try {
     await client.connect();
     await scraper.scrape();
-  } catch (err) {
-    console.error(err);
+  } catch (e: unknown) {
+    console.error(e);
   } finally {
     await client.close();
   }
