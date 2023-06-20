@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import env from 'dotenv';
 import { MongoClient } from 'mongodb';
-import Scraper from './data/Scraper';
+import Scraper from './Scraper';
 
 const app = express();
 
@@ -30,7 +30,4 @@ const main = async () => {
   }
 };
 
-(async () => {
-  const data = await main();
-  console.log(data);
-})();
+(async () => await main())();

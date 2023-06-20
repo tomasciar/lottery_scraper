@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
-import Balls from '../types/Balls';
+import Balls from './types/Balls';
 import { CheerioCrawler, log } from 'crawlee';
-import { Actor } from 'apify';
+import Price from './types/Price';
 
 /**
  * @class Scraper
@@ -39,17 +39,26 @@ export default class Scraper {
         for (const row of tableRows) {
           if ($(row).hasClass('noBox')) continue;
 
+          const results = $(row)
+            .find('ul.balls')
+            .children()
+            .toArray()
+            .map(ball => parseInt($(ball).text()));
+
+          const bonusBall = results.pop() || -1;
+
+          const regex = /[^A-Za-z0-9.]/g;
+          const jackpot = $(row).find('td[data-title="Jackpot"]').text().replace(regex, '');
+
           const balls: Balls = {
             drawDate: $(row).find('a').text(),
-            results: $(row)
-              .find('ul.balls')
-              .children()
-              .toArray()
-              .map(ball => parseInt($(ball).text())),
-            bonus: parseInt($(row).find('li.bonus-ball').text()),
-            jackpot: parseInt($(row).find('td[data-title="Jackpot"]').text()),
-            outcome: $(row).find('td[data-title="Outcome"]').text()
+            results: results,
+            bonus: bonusBall,
+            jackpot: jackpot ? new Price(Number(jackpot)).dollarValue : undefined,
+            outcome: $(row).find('td[data-title=Outcome] > span').text() || undefined
           };
+
+          if (balls.results.length === 7) balls.results.pop();
 
           winningBalls.push(balls);
         }
@@ -59,17 +68,29 @@ export default class Scraper {
     const startUrls: Array<string> = await this.getStartUrls();
     await crawler.run(startUrls);
 
-    console.log(winningBalls);
+    if (winningBalls.length > 0) {
+      await this.deleteData();
+      await this.postData(winningBalls);
+    }
 
-    if (winningBalls.length > 0) await this.postData(winningBalls);
     return winningBalls;
   }
 
   /**
-   * @function postMatches
+   * @function postData
    */
   async postData(items: Array<Balls>): Promise<void> {
     await this.client.db('lottery').collection('balls').insertMany(items);
+  }
+
+  /**
+   * @function deleteData
+   */
+  async deleteData(): Promise<void> {
+    await this.client
+      .db('lottery')
+      .collection('balls')
+      .deleteMany({ _id: { $exists: true } });
   }
 
   /**
