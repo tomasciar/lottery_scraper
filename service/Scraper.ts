@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
-import Balls from './types/Balls';
+import Balls from '../types/Balls';
 import { CheerioCrawler, log } from 'crawlee';
-import Price from './types/Price';
+import Price from '../types/Price';
 
 /**
  * @class Scraper
