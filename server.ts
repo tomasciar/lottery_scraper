@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import env from 'dotenv';
 import { MongoClient } from 'mongodb';
-import Scraper from './Scraper';
+import Scraper from './service/Scraper';
 
 const app = express();
 
